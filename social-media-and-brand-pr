@@ -1,0 +1,96 @@
+import tweepy
+import re
+from textblob import TextBlob
+import matplotlib.pyplot as plt
+from datetime import datetime
+
+# Twitter API credentials
+consumer_key = 'YOUR_CONSUMER_KEY'
+consumer_secret = 'YOUR_CONSUMER_SECRET'
+access_token = 'YOUR_ACCESS_TOKEN'
+access_token_secret = 'YOUR_ACCESS_TOKEN_SECRET'
+
+# Authenticate and create API object
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tweepy.API(auth)
+
+# Perform sentiment analysis
+def perform_sentiment_analysis(query, count):
+    tweets = []
+    sentiment_scores = {'positive': 0, 'negative': 0, 'neutral': 0}
+
+    # Fetch tweets
+    fetched_tweets = tweepy.Cursor(api.search, q=query, lang='en').items(count)
+
+    for tweet in fetched_tweets:
+        # Clean tweet text
+        clean_text = clean_tweet(tweet.text)
+
+        # Perform sentiment analysis
+        sentiment = get_tweet_sentiment(clean_text)
+
+        # Update sentiment scores
+        sentiment_scores[sentiment] += 1
+
+        # Append tweet to list
+        tweets.append(clean_text)
+
+    return tweets, sentiment_scores
+
+# Clean tweet text
+def clean_tweet(tweet):
+    cleaned_tweet = re.sub(r'@[A-Za-z0-9]+', '', tweet)  # Remove @mentions
+    cleaned_tweet = re.sub(r'#', '', cleaned_tweet)  # Remove hashtags
+    cleaned_tweet = re.sub(r'RT[\s]+', '', cleaned_tweet)  # Remove retweets
+    cleaned_tweet = re.sub(r'https?:\/\/\S+', '', cleaned_tweet)  # Remove hyperlinks
+    cleaned_tweet = re.sub(r'\n', '', cleaned_tweet)  # Remove newlines
+
+    return cleaned_tweet
+
+# Get sentiment of a tweet
+def get_tweet_sentiment(tweet):
+    analysis = TextBlob(tweet)
+
+    if analysis.sentiment.polarity > 0:
+        return 'positive'
+    elif analysis.sentiment.polarity < 0:
+        return 'negative'
+    else:
+        return 'neutral'
+
+# Visualize sentiment distribution
+def visualize_sentiment(sentiment_scores):
+    labels = list(sentiment_scores.keys())
+    sizes = list(sentiment_scores.values())
+
+    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=['green', 'red', 'gray'])
+    plt.title('Sentiment Distribution')
+    plt.axis('equal')
+    plt.show()
+
+# Main function
+def main():
+    query = 'YOUR_SEARCH_QUERY'
+    count = 100
+
+    # Perform sentiment analysis
+    tweets, sentiment_scores = perform_sentiment_analysis(query, count)
+
+    # Print sentiment scores
+    print('Sentiment Scores:')
+    for sentiment, score in sentiment_scores.items():
+        print(f'{sentiment.capitalize()}: {score}')
+
+    # Visualize sentiment distribution
+    visualize_sentiment(sentiment_scores)
+
+    # Print sample tweets
+    print('\nSample Tweets:')
+    for tweet in tweets[:5]:
+        print(tweet)
+        print('-' * 50)
+
+# Execute the main function
+if __name__ == "__main__":
+    main()
