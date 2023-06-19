@@ -1,0 +1,38 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+# Load customer data
+data = pd.read_csv('customer_data.csv')
+
+# Data preprocessing
+data = data.drop_duplicates()  # Remove duplicates
+data = data.dropna()  # Remove rows with missing values
+
+# Select relevant features
+features = ['PurchaseHistory', 'Age', 'TotalSpend']
+
+# Feature scaling
+scaler = StandardScaler()
+data_scaled = scaler.fit_transform(data[features])
+
+# Dimensionality reduction
+pca = PCA(n_components=2)
+data_pca = pca.fit_transform(data_scaled)
+
+# Perform K-means clustering
+kmeans = KMeans(n_clusters=4, random_state=42)
+data['Cluster'] = kmeans.fit_predict(data_scaled)
+
+# Visualize customer segments
+plt.scatter(data_pca[:, 0], data_pca[:, 1], c=data['Cluster'], cmap='viridis')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.title('Customer Segmentation')
+plt.show()
+
+# Segment analysis
+segment_analysis = data.groupby('Cluster')[features].mean()
+print(segment_analysis)
