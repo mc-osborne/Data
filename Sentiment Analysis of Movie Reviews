@@ -1,0 +1,34 @@
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load movie review data
+data = pd.read_csv('movie_reviews.csv')
+
+# Data preprocessing
+reviews = data['Review']
+sentiments = data['Sentiment']
+
+# Feature extraction
+vectorizer = CountVectorizer()
+X = vectorizer.fit_transform(reviews)
+y = sentiments
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Model training
+model = MultinomialNB()
+model.fit(X_train, y_train)
+
+# Model prediction
+y_pred = model.predict(X_test)
+
+# Model evaluation
+accuracy = accuracy_score(y_test, y_pred)
+report = classification_report(y_test, y_pred)
+
+print('Accuracy:', accuracy)
+print('Classification Report:\n', report)
